@@ -1,0 +1,154 @@
+---
+title: "Tutorial - R"
+author: "Blakemore Lab - Emily Towner"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: html_document
+---
+
+# Read in the data
+
+```{r setup, include=TRUE}
+
+# install.packages('tidyverse')
+# install.packages('afex')
+# install.packages('emmeans')
+# install.packages('meta')
+library(tidyverse)
+library(psych)
+library(afex)
+library(emmeans)
+library(meta)
+library(lm.beta)
+
+data <- read.csv("data.csv")
+data_meta <- read.csv("data_meta.csv")
+
+```
+
+```{r}
+
+# Summarize the numeric variables using 'describe' from the 'psych' package
+describe(data)
+
+ggplot(data, aes(x=age)) + 
+  geom_histogram(color = "black", fill = "white", stat = "count") +
+  labs(x = "Age", y = "Count")
+
+ggplot(data, aes(x=depression)) + 
+  geom_histogram(color = "black", fill = "white") +
+  labs(x = "Depression Score", y = "Count")
+
+ggplot(data, aes(x=test_score)) + 
+  geom_histogram(color = "black", fill = "white") +
+  labs(x = "Test Score", y = "Count")
+
+```
+
+```{r}
+
+my_anova <- aov_ez(data = data, dv = "anxiety", id = "participant", between = "group")
+my_anova
+
+means_table <- emmeans(my_anova, ~ group)
+means_table
+
+TukeyHSD(my_anova$aov)
+
+```
+
+```{r}
+
+data$group <- factor(data$group, levels = c("Early-Adolescence", "Mid-Adolescence", "Late-Adolescence"))
+ggplot(data, aes(x=group, y=anxiety)) + 
+  geom_point(position = position_jitter(width = .2)) +
+  stat_summary(fun.y = mean, geom = "point", shape = "diamond", size = 5, color = "red") +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = .2, color = "red") +
+  stat_summary(fun.y = mean, geom = "bar", alpha = 0.2) +
+  labs(x = "Age Group", y = "Anxiety") +
+  theme_minimal()
+
+```
+
+```{r}
+
+ggplot(data, aes(x=group, y=anxiety, fill = sex, color = sex)) + 
+  geom_point(position = position_jitterdodge(dodge.width = .9, jitter.width = .2), alpha = 0.5) +
+  stat_summary(fun.y = mean, geom = "point", shape = "diamond", size = 5, position = position_dodge(width = .9), color = "black") +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = .2, position = position_dodge(width = .9), color = "black") +
+  stat_summary(fun.y = mean, geom = "bar", alpha = 0.2, position = position_dodge(width = .9), color = NA) +
+  labs(x = "Age Group", y = "Anxiety", fill = "Sex", color = "Sex") +
+  theme_minimal()
+
+```
+
+```{r}
+
+ggplot(data, aes(x=anxiety, y=depression)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Anxiety", y = "Depression") +
+  theme_minimal()
+
+cor.test(data$anxiety, data$depression)
+
+```
+
+```{r}
+
+ggplot(data, aes(x=anxiety, y=depression, color = group)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "Anxiety", y = "Depression") +
+  theme_minimal()
+
+ggplot(data, aes(x=age, y=depression)) + 
+  geom_point(position = position_jitter(width = .1)) +
+  geom_smooth(method = "lm") +
+  labs(x = "Age", y = "Depression") +
+  theme_minimal()
+
+ggplot(data, aes(x=age, y=depression, color = sex)) + 
+  geom_point(position = position_jitter(width = .1)) +
+  geom_smooth(method = "lm") +
+  labs(x = "Age", y = "Depression", color = "Sex") +
+  theme_minimal()
+
+
+```
+
+```{r}
+
+fit <- lm(depression ~ sex + age + test_score, data)
+summary(fit)
+fit_beta <- lm.beta(fit)
+summary(fit_beta)
+
+```
+
+```{r}
+
+str(data_meta)
+
+```
+
+```{r, message = FALSE, fig.width = 10, fig.height = 6}
+
+meta_model <- metacont(n_experimental,
+         mean_experimental,
+         sd_experimental,
+         n_control,
+         mean_control,
+         sd_control,
+         data = data_meta,
+         studlab = paste(author),
+         comb.fixed = FALSE,
+         comb.random = TRUE,
+         method.tau = "SJ",
+         hakn = TRUE,
+         prediction = TRUE,
+         sm = "SMD")
+
+forest(meta_model)
+
+```
+

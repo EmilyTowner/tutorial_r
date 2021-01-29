@@ -5,31 +5,82 @@ date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output: html_document
 ---
 
-# Read in the data
+# Install and load the necessary packages
 
-```{r setup, include=TRUE}
+This will vary based on the tasks you will do in R for this script
 
+```{r setup, include=TRUE, message = FALSE, warning = FALSE}
+
+# This installs them (only need to do this once)
 # install.packages('tidyverse')
 # install.packages('afex')
 # install.packages('emmeans')
 # install.packages('meta')
+
+# This loads the package (need to do this every time you restart R)
 library(tidyverse)
 library(psych)
 library(afex)
 library(emmeans)
 library(meta)
 library(lm.beta)
+```
 
+# Read in the data
+
+Data should usually be in .csv format
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+
+# This reads in from your working directory - if using R-Markdown will be the root folder
 data <- read.csv("data.csv")
 data_meta <- read.csv("data_meta.csv")
 
 ```
 
-```{r}
+# Summarize numeric data
 
-# Summarize the numeric variables using 'describe' from the 'psych' package
+```{r, include = TRUE, message = FALSE, warning = FALSE}
+
+# The 'psych' package has a nice function 'describe'
 describe(data)
 
+# We have two 'factor' variables - group and sex, but wait, participant should also be treated as a factor, what is it now?
+
+class(data$participant)
+
+# R is treating it as an integer, so we will want to fix that
+
+data$participant <- as.factor(data$participant)
+
+# Check if it worked
+
+class(data$participant)
+
+# What are the levels of our 'factor' variables - group and sex
+
+levels(data$sex)
+levels(data$group)
+
+# Cool, we have groups by stage of adolescence, what are the age ranges for those groups?
+
+range(data$age[data$group == "Early-Adolescence"])
+range(data$age[data$group == "Mid-Adolescence"])
+range(data$age[data$group == "Late-Adolescence"])
+
+# How many are in each group?
+
+count(data[data$group == "Early-Adolescence",])
+count(data[data$group == "Mid-Adolescence",])
+count(data[data$group == "Late-Adolescence",])
+
+```
+
+# Look at data distributions
+
+A good first step before analysis.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 ggplot(data, aes(x=age)) + 
   geom_histogram(color = "black", fill = "white", stat = "count") +
   labs(x = "Age", y = "Count")
@@ -44,19 +95,39 @@ ggplot(data, aes(x=test_score)) +
 
 ```
 
-```{r}
+# Inferential statistics
+
+Perhaps we want to know whether the level of reported anxiety is different between early adolescents, mid adolescents, and late adolescents. Since we have more than 2 groups, we need to do an anova instead of a t-test.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 my_anova <- aov_ez(data = data, dv = "anxiety", id = "participant", between = "group")
 my_anova
 
+```
+
+We can see that we have a statistically significant difference between our groups, let's see what the means of each group are.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 means_table <- emmeans(my_anova, ~ group)
 means_table
+```
+
+Now let's do post-hoc comparisons using Tukey's test.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 TukeyHSD(my_anova$aov)
 
 ```
 
-```{r}
+We can see that all the groups are statistically significantly different from each other.
+
+# Visualizing the data
+
+## Plotting means
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 data$group <- factor(data$group, levels = c("Early-Adolescence", "Mid-Adolescence", "Late-Adolescence"))
 ggplot(data, aes(x=group, y=anxiety)) + 
@@ -69,7 +140,9 @@ ggplot(data, aes(x=group, y=anxiety)) +
 
 ```
 
-```{r}
+Say we want to split by sex, and look at the data this way.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 ggplot(data, aes(x=group, y=anxiety, fill = sex, color = sex)) + 
   geom_point(position = position_jitterdodge(dodge.width = .9, jitter.width = .2), alpha = 0.5) +
@@ -81,7 +154,11 @@ ggplot(data, aes(x=group, y=anxiety, fill = sex, color = sex)) +
 
 ```
 
-```{r}
+## Plotting associations
+
+Let's look at the association between anxiety and depression in this sample.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 ggplot(data, aes(x=anxiety, y=depression)) + 
   geom_point() +
@@ -89,11 +166,19 @@ ggplot(data, aes(x=anxiety, y=depression)) +
   labs(x = "Anxiety", y = "Depression") +
   theme_minimal()
 
+```
+
+That looks like a pretty strong correlation - let's test it statistically.
+
+```{r}
+
 cor.test(data$anxiety, data$depression)
 
 ```
 
-```{r}
+We can also split these correlation plots in many of the same ways.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 ggplot(data, aes(x=anxiety, y=depression, color = group)) + 
   geom_point() +
@@ -116,22 +201,64 @@ ggplot(data, aes(x=age, y=depression, color = sex)) +
 
 ```
 
-```{r}
+# More advanced topics
+
+## Linear regression
+
+A more advanced version of correlation - for those who are interested.
+
+Here we can look at the association between age and depression, controlling for sex and test score.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 fit <- lm(depression ~ sex + age + test_score, data)
 summary(fit)
+
+```
+
+We see a significant association between age and depression, such that for every year older a participant is their depression score is on average 1.21 points higher, holding sex and test score constant. 
+
+The intercept represents the average depression score at age 0, holding sex and test score constant (which doesn't make sense, hence the danger of extrapolation beyond your sample!).
+
+We also see a significant relationship between sex and depression. On average, males scored 6.39 points higher on depression than females. 
+
+Test score does not seem to influence depression.
+
+You can predict what score someone might get using this model!
+
+```{r}
+
+# For a female, with an age of 17, with a test score of 80
+predicted_depression_score_female <- (6.39*0) + (1.21*17) + (0.05 * 80)
+predicted_depression_score_female
+
+# For a female, with an age of 17, with a test score of 80
+predicted_depression_score_male <- (6.39*1) + (1.21*17) + (0.05 * 80)
+predicted_depression_score_male
+```
+
+We can also calculate the standardized regression coefficients (betas) using the lm.beta package, which I find very useful!
+
+A standardized beta coefficient compares the strength of the effect of each individual independent variable to the dependent variable. In other words, standardized beta coefficients are the coefficients that you would get if the variables in the regression were all converted to z-scores before running the analysis.
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
+
 fit_beta <- lm.beta(fit)
 summary(fit_beta)
 
 ```
 
-```{r}
+## Meta analysis
+
+For those doing meta analysis in their dissertation projects!
+
+```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 str(data_meta)
 
 ```
 
-```{r, message = FALSE, fig.width = 10, fig.height = 6}
+```{r, include = TRUE, message = FALSE, warning = FALSE, fig.width = 10, fig.height = 6}
 
 meta_model <- metacont(n_experimental,
          mean_experimental,

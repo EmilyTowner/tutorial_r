@@ -220,18 +220,21 @@ ggplot(my_data_frame, aes(x = sex)) +
 
 ## Plotting - bar plot
 
-```{r plotting-3, echo = TRUE, message = FALSE, warning = FALSE, fig.width= 3, fig.height= 2.5, fig.align= 'center'}
+```{r plotting-3, echo = TRUE, message = FALSE, warning = FALSE, fig.width= 3, fig.height= 2, fig.align= 'center'}
 ggplot(my_data_frame, aes(x = sex, y = score_1)) +
   stat_summary(fun = mean, geom = "bar") +
-  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = .2) +
+  stat_summary(fun.data = mean_cl_normal, 
+               geom = "errorbar", width = .2) +
   xlab("Sex") + ylab("Score 1") +
   theme_minimal()
 ``` 
 
 ## R-guide
 
+- Code and simulated data for today's session can be found [**here**](https://github.com/blakemorelab/tutorial_r)
+  - https://github.com/blakemorelab/tutorial_r
 - I will send around an R-guide with more detailed instructions
-- Please do not distribute as it is a work in-progress
+  - Please do not distribute the guide as it is a work in-progress
 
 A snippet from the guide:
 

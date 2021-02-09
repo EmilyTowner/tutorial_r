@@ -12,7 +12,7 @@ This will vary based on the tasks you will do in R for this script
 ```{r setup, include=TRUE, message = FALSE, warning = FALSE}
 
 # This installs them (only need to do this once)
-# install.packages('tidyverse')
+install.packages('tidyverse')
 # install.packages('afex')
 # install.packages('emmeans')
 # install.packages('meta')
@@ -81,6 +81,7 @@ count(data[data$group == "Late-Adolescence",])
 A good first step before analysis.
 
 ```{r, include = TRUE, message = FALSE, warning = FALSE}
+
 ggplot(data, aes(x=age)) + 
   geom_histogram(color = "black", fill = "white", stat = "count") +
   labs(x = "Age", y = "Count")
@@ -130,6 +131,7 @@ We can see that all the groups are statistically significantly different from ea
 ```{r, include = TRUE, message = FALSE, warning = FALSE}
 
 data$group <- factor(data$group, levels = c("Early-Adolescence", "Mid-Adolescence", "Late-Adolescence"))
+
 ggplot(data, aes(x=group, y=anxiety)) + 
   geom_point(position = position_jitter(width = .2)) +
   stat_summary(fun.y = mean, geom = "point", shape = "diamond", size = 5, color = "red") +
@@ -146,8 +148,8 @@ Say we want to split by sex, and look at the data this way.
 
 ggplot(data, aes(x=group, y=anxiety, fill = sex, color = sex)) + 
   geom_point(position = position_jitterdodge(dodge.width = .9, jitter.width = .2), alpha = 0.5) +
-  stat_summary(fun.y = mean, geom = "point", shape = "diamond", size = 5, position = position_dodge(width = .9), color = "black") +
-  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = .2, position = position_dodge(width = .9), color = "black") +
+  stat_summary(fun.y = mean, geom = "point", shape = "diamond", size = 5, position = position_dodge(width = 0.9), color = "black") +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = .2, position = position_dodge(width = 0.9), color = "black") +
   stat_summary(fun.y = mean, geom = "bar", alpha = 0.2, position = position_dodge(width = .9), color = NA) +
   labs(x = "Age Group", y = "Anxiety", fill = "Sex", color = "Sex") +
   theme_minimal()

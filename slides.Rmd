@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ## Why R?
 
 ![](images/why-r.jpg)
+Meme credit to Chelsea Parlett-Pelleriti - @ChelseaParlett
 
 ## Why R?
 
@@ -241,5 +242,7 @@ A snippet from the guide:
 ![](images/thanks-ryan.png)
 
 Thanks Ryan! Lolz
+
+Content adapted with help from Ryan Burnell - @KiwiBurnell
 
 # Now let's do a tutorial with a larger dataset!

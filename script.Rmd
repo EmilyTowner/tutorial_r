@@ -12,7 +12,8 @@ This will vary based on the tasks you will do in R for this script
 ```{r setup, include=TRUE, message = FALSE, warning = FALSE}
 
 # This installs them (only need to do this once)
-install.packages('tidyverse')
+
+# install.packages('tidyverse')
 # install.packages('afex')
 # install.packages('emmeans')
 # install.packages('meta')
@@ -274,10 +275,11 @@ meta_model <- metacont(n_experimental,
          comb.random = TRUE,
          method.tau = "SJ",
          hakn = TRUE,
-         prediction = TRUE,
+         prediction = FALSE,
          sm = "SMD")
 
-forest(meta_model)
+forest(meta_model,
+       layout = "JAMA")
 
 ```
 
